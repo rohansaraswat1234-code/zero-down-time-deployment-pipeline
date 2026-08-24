@@ -29,4 +29,4 @@ jobs:
       - name: Test Flask application
         working-directory: backend
         run: |
-          python -c "from app import app; client = app.test_client(); response = client.get('/health'); assert response.status_code == 200; print('Health check passed')"
+          python -c "from server import app; client = app.test_client(); response = client.get('/health'); assert response.status_code == 200; print('Health check passed')"

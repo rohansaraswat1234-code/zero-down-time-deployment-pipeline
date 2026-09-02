@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
+
+# Local runtime/security files
+data/users.db
+database/users.db
+backend/control_server_backup.py

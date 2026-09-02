@@ -163,13 +163,28 @@
 <body>
 
 <div class="header">
-    <h1>Zero Downtime Deployment Dashboard</h1>
-    <p>Blue-Green Deployment • Monitoring • Rollback • Analytics</p>
+    <h1>Admin Dashboard</h1>
+    <p>Zero Downtime Deployment Control Center</p>
+    <button onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
 
     <div class="live">● LIVE MONITORING</div>
+    <div class="section">
+        <h2>Admin Controls</h2>
+
+        <button onclick="deployApp()" style="padding:12px 20px; margin-right:10px; cursor:pointer;">
+            Deploy New Version
+        </button>
+
+        <button onclick="rollbackApp()" style="padding:12px 20px; cursor:pointer;">
+            Rollback
+        </button>
+
+        <p id="actionStatus" style="margin-top:15px; font-weight:bold;"></p>
+    </div>
+
 
     <div class="grid">
 
@@ -279,7 +294,125 @@
 
 <script>
 
+if (localStorage.getItem("userRole") !== "admin") {
+    window.location.href = "login.html";
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
+}
+
 const API = "http://localhost:8080";
+
+
+
+const CONTROL_API = "http://localhost:9000";
+
+async function getAdminToken() {
+    let token = sessionStorage.getItem("adminControlToken");
+
+    if (token) {
+        return token;
+    }
+
+    const password = prompt("Enter admin password:");
+
+    if (!password) {
+        throw new Error("Admin password required");
+    }
+
+    const response = await fetch(`${CONTROL_API}/control/admin-login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: "admin@pipeline.com",
+            password: password
+        })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || "Admin authentication failed");
+    }
+
+    sessionStorage.setItem("adminControlToken", data.token);
+    return data.token;
+}
+
+
+async function deployApp() {
+    const status = document.getElementById("actionStatus");
+
+    try {
+        const token = await getAdminToken();
+
+        status.innerText = "Deployment running...";
+
+        const response = await fetch(`${CONTROL_API}/admin/deploy`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+            sessionStorage.removeItem("adminControlToken");
+            status.innerText = "Admin session expired. Click Deploy again.";
+            return;
+        }
+
+        status.innerText = data.message;
+
+        if (response.ok) {
+            setTimeout(loadDashboard, 2000);
+        }
+
+    } catch (error) {
+        status.innerText = error.message;
+    }
+}
+
+
+async function rollbackApp() {
+    const status = document.getElementById("actionStatus");
+
+    try {
+        const token = await getAdminToken();
+
+        status.innerText = "Rollback running...";
+
+        const response = await fetch(`${CONTROL_API}/admin/rollback`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+            sessionStorage.removeItem("adminControlToken");
+            status.innerText = "Admin session expired. Click Rollback again.";
+            return;
+        }
+
+        status.innerText = data.message;
+
+        if (response.ok) {
+            setTimeout(loadDashboard, 2000);
+        }
+
+    } catch (error) {
+        status.innerText = error.message;
+    }
+}
+
 
 async function loadDashboard() {
 

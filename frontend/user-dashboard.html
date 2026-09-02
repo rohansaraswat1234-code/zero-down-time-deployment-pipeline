@@ -163,8 +163,8 @@
 <body>
 
 <div class="header">
-    <h1>Zero Downtime Deployment Dashboard</h1>
-    <p>Blue-Green Deployment • Monitoring • Rollback • Analytics</p>
+    <h1>User Dashboard</h1>
+    <p>Deployment Monitoring & System Status</p><button onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
@@ -278,6 +278,15 @@
 </div>
 
 <script>
+
+if (localStorage.getItem("userRole") !== "user") {
+    window.location.href = "login.html";
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
+}
 
 const API = "http://localhost:8080";
 
